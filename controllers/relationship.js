@@ -1,20 +1,20 @@
 import { db } from "../connect.js";
 import jwt from "jsonwebtoken";
 
-export const getLikes = (req, res) => {
+export const getRelationships = (req, res) => {
 
-    const q = `SELECT userId FROM likes WHERE postId = ?`;
+    const q = `SELECT followerUserId FROM relationships WHERE followedUserId = ?`;
     
-    db.query(q, [ req.query.postId ], (err, data) => {
+    db.query(q, [ req.query.followedUserId ], (err, data) => {
     
         if(err) return res.status(500).json(err);
-        return res.status(200).json(data.map((like) => like.userId));
+        return res.status(200).json(data.map((relationship) => relationship.followerUserId));
             
     });
     
 }
 
-export const addLike = (req, res) => {
+export const addRelationship = (req, res) => {
 
     const token = req.cookies.accessToken;
     if(!token) return res.status(401).json("User not logged in!");
@@ -23,17 +23,17 @@ export const addLike = (req, res) => {
 
         if(err) return res.status(403).json("Token invalid!");
 
-        const q = "INSERT INTO likes (`userId`, `postId`) VALUES (?)";
+        const q = "INSERT INTO relationships (`followerUserId`, `followedUserId`) VALUES (?)";
       
         const values = [ 
             userInfo.id,
-            req.body.postId
+            req.body.userId
          ];
     
         db.query(q, [ values ], (err, data) => {
     
             if(err) return res.status(500).json(err);
-            return res.status(200).json("Like has been added!");
+            return res.status(200).json("User has been followed!");
             
         });
 
@@ -41,7 +41,7 @@ export const addLike = (req, res) => {
     
 }
 
-export const removeLike = (req, res) => {
+export const removeRelationship = (req, res) => {
     
     const token = req.cookies.accessToken;
     if(!token) return res.status(401).json("User not logged in!");
@@ -50,12 +50,12 @@ export const removeLike = (req, res) => {
 
         if(err) return res.status(403).json("Token invalid!");
 
-        const q = "DELETE FROM likes WHERE `userId` = ? AND `postId` = ?";
+        const q = "DELETE FROM relationships WHERE `followerUserId` = ? AND `followedUserId` = ?";
     
-        db.query(q, [ userInfo.id, req.query.postId ], (err, data) => {
+        db.query(q, [ userInfo.id, req.query.userId ], (err, data) => {
     
             if(err) return res.status(500).json(err);
-            return res.status(200).json("Like has been removed!");
+            return res.status(200).json("User has been unfollowed!");
             
         });
 
